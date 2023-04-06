@@ -14,7 +14,8 @@ jobs:
           - { qt-version: 5.15.2, cmake-args: '' }
 
     defaults:
-      shell: bash
+      run:
+        shell: bash
 
     steps:
     - uses: actions/checkout@v2

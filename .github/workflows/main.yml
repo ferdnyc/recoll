@@ -24,33 +24,37 @@ jobs:
       uses: jurplel/install-qt-action@v2
       with:
         version: ${{ matrix.config.qt-version }}
+        modules: 'qtwebengine qtwebview'
+        archives: 'qtbase qttranslations qttools qtwebview'
+        cache: 'true'
 
     - name: Install dependencies (macOS)
       id: macos_brew
       run: |
         echo HOMEBREW_PREFIX="`brew --prefix`" >> $GITHUB_ENV
         brew update
-        brew install --overwrite xapian libxml2
+        brew install --overwrite ninja xapian libxml2
         echo "::set-output name=brew-prefix::$(brew --prefix)"
         brew list --versions > brew_installed.txt
 
     - name: Configure environment
       run: |
         echo CMAKE_ARGS="${{ matrix.config.cmake-args }}" >> $GITHUB_ENV
-        if [ "${{ matrix.os == 'macos' }}" ]; then
+        if [ "${{ matrix.os == 'macos' }}" = "true" ]; then
           echo CMAKE_ARGS="\
             -Dlibxml2_DIR=`brew --prefix`/opt/libxml2/lib/cmake/ \
             ${{ matrix.config.cmake-args }} \
-          " >> $GITHUB_ENV;
-        else;
-          echo CMAKE_ARGS="${{ matrix.config.cmake-args }}" >> $GITHUB_ENV;
+          " >> $GITHUB_ENV
+        else
+          echo CMAKE_ARGS="${{ matrix.config.cmake-args }}" >> $GITHUB_ENV
+        fi
 
-    - name: Cache Homebrew (macos)
-      if: matrix.os == 'macos' && always()
-      uses: actions/cache@v3
-      with:
-        path: ${{ steps.macos_brew.outputs.brew-prefix }}
-        key: ${{ runner.os }}-${{ hashfiles('brew_installed.txt') }}
+    # - name: Cache Homebrew (macos)
+    #   if: matrix.os == 'macos' && always()
+    #   uses: actions/cache@v3
+    #   with:
+    #     path: ${{ steps.macos_brew.outputs.brew-prefix }}
+    #     key: ${{ runner.os }}-${{ hashfiles('brew_installed.txt') }}
 
     - name: CMake build
       run: |

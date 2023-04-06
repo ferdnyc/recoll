@@ -10,7 +10,7 @@ jobs:
       matrix:
         os: [macos-latest]
         config:
-          - { qt-version: 6.4.2, cmake-args: '-DRECOLL_QT6_BUILD=1' }
+          - { qt-version: 6.4.3, cmake-args: '-DRECOLL_QT6_BUILD=1' }
           - { qt-version: 5.15.2, cmake-args: '' }
 
     defaults:
@@ -20,46 +20,53 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Configure environment
+      id: env_config
+      run: |
+        QT_VERSION=${{ matrix.config.qt-version }}
+        QT_MAJOR_VERSION=${QT_VERSION:0:1}
+
+        # Compute command-line options for CMake
+        CMAKE_ARGS="${{ matrix.config.cmake-args }}"
+        if [ "${{ matrix.os == 'macos' }}" = "true" ]; then
+          CMAKE_ARGS="${CMAKE_ARGS} \
+            -Dlibxml2_DIR=`brew --prefix`/opt/libxml2/lib/cmake/"
+        fi
+        echo cmake_args="${CMAKE_ARGS}" >> $GITHUB_OUTPUT
+
+        # Compute set of archives/modules for install-qt-action
+        if [ ${QT_MAJOR_VERSION} -lt 6 ]; then
+          echo qt_modules="qtwebengine" >> $GITHUB_OUTPUT
+          echo qt_archives="qtbase qtdeclarative qtlocation \
+            qttranslations qttools qtwebchannel qtwebview" >> $GITHUB_OUTPUT
+        else
+          echo qt_modules="qtpositioning qtwebengine qtwebview \
+            qtwebchannel" >> $GITHUB_OUTPUT
+          echo qt_archives="qtbase qtdeclarative qttranslations \
+            qttools" >> $GITHUB_OUTPUT
+        fi
+
+
     - name: Install Qt
-      uses: jurplel/install-qt-action@v2
+      uses: jurplel/install-qt-action@v3
       with:
         version: ${{ matrix.config.qt-version }}
-        modules: 'qtwebengine qtwebview'
-        archives: 'qtbase qttranslations qttools qtwebview'
+        modules: ${{ steps.env_config.outputs.qt_modules }}
+        archives: ${{ steps.env_config.outputs.qt_archives }}
         cache: 'true'
 
     - name: Install dependencies (macOS)
       id: macos_brew
       run: |
-        echo HOMEBREW_PREFIX="`brew --prefix`" >> $GITHUB_ENV
         brew update
         brew install --overwrite ninja xapian libxml2
-        echo "::set-output name=brew-prefix::$(brew --prefix)"
-        brew list --versions > brew_installed.txt
+      # brew list --versions > brew_installed.txt
 
-    - name: Configure environment
-      run: |
-        echo CMAKE_ARGS="${{ matrix.config.cmake-args }}" >> $GITHUB_ENV
-        if [ "${{ matrix.os == 'macos' }}" = "true" ]; then
-          echo CMAKE_ARGS="\
-            -Dlibxml2_DIR=`brew --prefix`/opt/libxml2/lib/cmake/ \
-            ${{ matrix.config.cmake-args }} \
-          " >> $GITHUB_ENV
-        else
-          echo CMAKE_ARGS="${{ matrix.config.cmake-args }}" >> $GITHUB_ENV
-        fi
-
-    # - name: Cache Homebrew (macos)
-    #   if: matrix.os == 'macos' && always()
-    #   uses: actions/cache@v3
-    #   with:
-    #     path: ${{ steps.macos_brew.outputs.brew-prefix }}
-    #     key: ${{ runner.os }}-${{ hashfiles('brew_installed.txt') }}
 
     - name: CMake build
       run: |
         cmake -G Ninja -B _build -S src \
           -DCMAKE_INSTALL_PREFIX=`pwd`/dist \
-          $CMAKE_ARGS
+          ${{ steps.env_config.outputs.cmake_args }}
         cmake --build _build
         cmake --install _build

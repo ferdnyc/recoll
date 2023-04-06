@@ -1,0 +1,60 @@
+name: build
+
+on: push
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: macos-latest
+        config:
+          - { qt-version: 6.4.2, cmake-args: '-DBUILD_WITH_QT6=1' }
+          - { qt-version: 5.15.2, cmake-args: '' }
+
+    defaults:
+      shell: bash
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: ${{ matrix.config.qt-version }}
+
+    - name: Install dependencies (macOS)
+      id: macos_brew
+      run: |
+        echo HOMEBREW_PREFIX="`brew --prefix`" >> $GITHUB_ENV
+        brew update
+        brew install --overwrite xapian libxml2
+        echo "::set-output name=brew-prefix::$(brew --prefix)"
+        brew list --versions > brew_installed.txt
+
+    - name: Configure environment
+      run: |
+        echo CMAKE_ARGS="${{ matrix.config.cmake-args }}" >> $GITHUB_ENV
+        if [ "${{ matrix.os == 'macos' }}" ]; then
+          echo CMAKE_ARGS="\
+            -Dlibxml2_DIR=`brew --prefix`/opt/libxml2/lib/cmake/ \
+            ${{ matrix.config.cmake-args }} \
+          " >> $GITHUB_ENV;
+        else;
+          echo CMAKE_ARGS="${{ matrix.config.cmake-args }}" >> $GITHUB_ENV;
+
+    - name: Cache Homebrew (macos)
+      if: matrix.os == 'macos' && always()
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.macos_brew.outputs.brew-prefix }}
+        key: ${{ runner.os }}-${{ hashfiles('brew_installed.txt') }}
+
+    - name: CMake build
+      run: |
+        cmake -G Ninja -B _build -S src \
+          -DCMAKE_INSTALL_PREFIX=`pwd`/dist \
+          $CMAKE_ARGS
+        cmake --build _build
+        cmake --install _build

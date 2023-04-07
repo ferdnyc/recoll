@@ -3164,8 +3164,6 @@ SWIG_AsVal_double (PyObject *obj, double *val)
 #include <float.h>
 
 
-#include <math.h>
-
 
 SWIGINTERNINLINE int
 SWIG_CanCastAsInteger(double *d, double min, double max) {

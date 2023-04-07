@@ -31,7 +31,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-#include <math.h>
 
 #include <iostream>
 
@@ -43,7 +42,7 @@
 using namespace std;
 
 #define OPT_H 0x1
-#define OPT_L 0x2   
+#define OPT_L 0x2
 #define OPT_t 0x4
 
 static string thisprog;
@@ -72,16 +71,16 @@ public:
 #if 0
         if (m_hdata) {
             string s1, s2;
-            stringsToString<vector<string> >(m_hdata->groups[idx], s1); 
+            stringsToString<vector<string> >(m_hdata->groups[idx], s1);
             stringsToString<vector<string> >(
                 m_hdata->ugroups[m_hdata->grpsugidx[idx]], s2);
             LOGDEB2("Reslist startmatch: group " << s1 << " user group " <<
                     s2 << "\n");
         }
-#endif                
+#endif
         return "<SPAN class='RCLMATCH'>";
     }
-        
+
     virtual string endMatch() {
         return "</SPAN>";
     }
@@ -92,7 +91,7 @@ int main(int argc, char **argv)
     int loglevel = 4;
     HighlightData hldata;
     bool ishtml{false};
-    
+
     thisprog = argv[0];
     argc--; argv++;
 
@@ -152,7 +151,7 @@ int main(int argc, char **argv)
     } else {
         Usage();
     }
-            
+
 
     TstPlainToRich hiliter;
     if (ishtml) {

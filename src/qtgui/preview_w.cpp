@@ -16,8 +16,6 @@
  */
 #include "autoconfig.h"
 
-#include <math.h>
-
 #include <list>
 #include <utility>
 

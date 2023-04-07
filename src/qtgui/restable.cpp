@@ -18,7 +18,6 @@
 
 #include "restable.h"
 
-#include <math.h>
 #include <stdlib.h>
 #include <time.h>
 #include <stdint.h>

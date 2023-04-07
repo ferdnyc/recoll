@@ -20,7 +20,6 @@
 #include <cstring>
 #include <exception>
 #include "safeunistd.h"
-#include <math.h>
 #include <time.h>
 
 #include <string>
@@ -108,12 +107,12 @@ const string page_break_term = "XXPG/";
 // Special term to mark documents with children.
 const string has_children_term("XXC/");
 
-// Field name for the unsplit file name. Has to exist in the field file 
+// Field name for the unsplit file name. Has to exist in the field file
 // because of usage in termmatch()
 const string unsplitFilenameFieldName = "rclUnsplitFN";
 static const string unsplitfilename_prefix = "XSFS";
 
-// Empty string md5s 
+// Empty string md5s
 static const string cstr_md5empty("d41d8cd98f00b204e9800998ecf8427e");
 
 static const int MB = 1024 * 1024;
@@ -127,7 +126,7 @@ string version_string(){
 // found in document)
 static const string cstr_syntAbs("?!#@");
 
-// Compute the unique term used to link documents to their origin. 
+// Compute the unique term used to link documents to their origin.
 // "Q" + external udi
 static inline string make_uniterm(const string& udi)
 {
@@ -148,17 +147,17 @@ static inline string make_parentterm(const string& udi)
     return pterm;
 }
 
-Db::Native::Native(Db *db) 
+Db::Native::Native(Db *db)
     : m_rcldb(db)
 #ifdef IDX_THREADS
     , m_wqueue("DbUpd", m_rcldb->m_config->getThrConf(RclConfig::ThrDbWrite).first)
 #endif // IDX_THREADS
-{ 
+{
     LOGDEB1("Native::Native: me " << this << "\n");
 }
 
-Db::Native::~Native() 
-{ 
+Db::Native::~Native()
+{
     LOGDEB1("Native::~Native: me " << this << "\n");
 #ifdef IDX_THREADS
     if (m_havewriteq) {
@@ -251,9 +250,9 @@ void Db::Native::openWrite(const string& dir, Db::OpenMode mode)
         }
     }
 #endif
-    
+
     if (path_exists(dir)) {
-        // Existing index. 
+        // Existing index.
         xwdb = Xapian::WritableDatabase(dir, action);
         if (action == Xapian::DB_CREATE_OR_OVERWRITE ||
             xwdb.get_doccount() == 0) {
@@ -306,7 +305,7 @@ void Db::Native::openWrite(const string& dir, Db::OpenMode mode)
 #endif
     }
 
-    // If the index is empty, write the data format version, 
+    // If the index is empty, write the data format version,
     // and the storetext option value inside the index descriptor (new
     // with recoll 1.24, maybe we'll have other stuff to store in
     // there in the future).
@@ -345,14 +344,14 @@ void Db::Native::openRead(const string& dir)
 
 /* See comment in class declaration: return all subdocuments of a
  * document given by its unique id. */
-bool Db::Native::subDocs(const string &udi, int idxi, 
-                         vector<Xapian::docid>& docids) 
+bool Db::Native::subDocs(const string &udi, int idxi,
+                         vector<Xapian::docid>& docids)
 {
     LOGDEB2("subDocs: [" << udi << "]\n");
     string pterm = make_parentterm(udi);
     vector<Xapian::docid> candidates;
     XAPTRY(docids.clear();
-           candidates.insert(candidates.begin(), xrdb.postlist_begin(pterm), 
+           candidates.insert(candidates.begin(), xrdb.postlist_begin(pterm),
                              xrdb.postlist_end(pterm)),
            xrdb, m_rcldb->m_reason);
     if (!m_rcldb->m_reason.empty()) {
@@ -452,7 +451,7 @@ bool Db::Native::clearField(Xapian::Document& xdoc, const string& pfx,
             Xapian::TermIterator xit;
             xit = xdoc.termlist_begin();
             xit.skip_to(wrapd);
-            while (xit != xdoc.termlist_end() && 
+            while (xit != xdoc.termlist_end() &&
                    !(*xit).compare(0, wrapd.size(), wrapd)) {
                 LOGDEB1("Db::clearfield: erasing for [" << *xit << "]\n");
                 Xapian::PositionIterator posit;
@@ -481,7 +480,7 @@ bool Db::Native::clearField(Xapian::Document& xdoc, const string& pfx,
          it != eraselist.end(); it++) {
         LOGDEB1("Db::clearField: remove posting: [" << it->term << "] pos [" <<
                 it->pos << "]\n");
-        XAPTRY(xdoc.remove_posting(it->term, it->pos, wdfdec);, 
+        XAPTRY(xdoc.remove_posting(it->term, it->pos, wdfdec);,
                xwdb,m_rcldb->m_reason);
         if (!m_rcldb->m_reason.empty()) {
             // Not that this normally fails for non-prefixed XXST and
@@ -517,14 +516,14 @@ bool Db::Native::hasTerm(const string& udi, int idxi, const string& term)
 
 // Retrieve Xapian document, given udi. There may be several identical udis
 // if we are using multiple indexes.
-Xapian::docid Db::Native::getDoc(const string& udi, int idxi, 
+Xapian::docid Db::Native::getDoc(const string& udi, int idxi,
                                  Xapian::Document& xdoc)
 {
     string uniterm = make_uniterm(udi);
     for (int tries = 0; tries < 2; tries++) {
         try {
             Xapian::PostingIterator docid;
-            for (docid = xrdb.postlist_begin(uniterm); 
+            for (docid = xrdb.postlist_begin(uniterm);
                  docid != xrdb.postlist_end(uniterm); docid++) {
                 xdoc = xrdb.get_document(*docid);
                 if (whatDbIdx(*docid) == (size_t)idxi)
@@ -544,7 +543,7 @@ Xapian::docid Db::Native::getDoc(const string& udi, int idxi,
 }
 
 // Turn data record from db into document fields
-bool Db::Native::dbDataToRclDoc(Xapian::docid docid, std::string &data, 
+bool Db::Native::dbDataToRclDoc(Xapian::docid docid, std::string &data,
                                 Doc &doc, bool fetchtext)
 {
     LOGDEB2("Db::dbDataToRclDoc: data:\n" << data << "\n");
@@ -586,7 +585,7 @@ bool Db::Native::dbDataToRclDoc(Xapian::docid docid, std::string &data,
     // used to index the beginning of the text as abstract).
     doc.syntabs = false;
     if (doc.meta[Doc::keyabs].find(cstr_syntAbs) == 0) {
-        doc.meta[Doc::keyabs] = 
+        doc.meta[Doc::keyabs] =
             doc.meta[Doc::keyabs].substr(cstr_syntAbs.length());
         doc.syntabs = true;
     }
@@ -598,7 +597,7 @@ bool Db::Native::dbDataToRclDoc(Xapian::docid docid, std::string &data,
 
     // Normal key/value pairs:
     vector<string> keys = parms.getNames(string());
-    for (vector<string>::const_iterator it = keys.begin(); 
+    for (vector<string>::const_iterator it = keys.begin();
          it != keys.end(); it++) {
         if (doc.meta.find(*it) == doc.meta.end())
             parms.get(*it, doc.meta[*it]);
@@ -615,7 +614,7 @@ bool Db::Native::hasPages(Xapian::docid docid)
 {
     string ermsg;
     Xapian::PositionIterator pos;
-    XAPTRY(pos = xrdb.positionlist_begin(docid, page_break_term); 
+    XAPTRY(pos = xrdb.positionlist_begin(docid, page_break_term);
            if (pos != xrdb.positionlist_end(docid, page_break_term)) {
                return true;
            },
@@ -638,7 +637,7 @@ bool Db::Native::getPagePositions(Xapian::docid docid, vector<int>& vpos)
         string data = xdoc.get_data();
         Doc doc;
         string mbreaks;
-        if (dbDataToRclDoc(docid, data, doc) && 
+        if (dbDataToRclDoc(docid, data, doc) &&
             doc.getmeta(cstr_mbreaks, &mbreaks)) {
             vector<string> values;
             stringToTokens(mbreaks, values, ",");
@@ -654,7 +653,7 @@ bool Db::Native::getPagePositions(Xapian::docid docid, vector<int>& vpos)
     string qterm = page_break_term;
     Xapian::PositionIterator pos;
     try {
-        for (pos = xrdb.positionlist_begin(docid, qterm); 
+        for (pos = xrdb.positionlist_begin(docid, qterm);
              pos != xrdb.positionlist_end(docid, qterm); pos++) {
             int ipos = *pos;
             if (ipos < int(baseTextPosition)) {
@@ -667,11 +666,11 @@ bool Db::Native::getPagePositions(Xapian::docid docid, vector<int>& vpos)
             if (it != mbreaksmap.end()) {
                 LOGDEB1("getPagePositions: found multibreak at " << ipos <<
                         " incr " << it->second << "\n");
-                for (int i = 0 ; i < it->second; i++) 
+                for (int i = 0 ; i < it->second; i++)
                     vpos.push_back(ipos);
             }
             vpos.push_back(ipos);
-        } 
+        }
     } catch (...) {
         // Term does not occur. No problem.
     }
@@ -682,7 +681,7 @@ int Db::Native::getPageNumberForPosition(const vector<int>& pbreaks, int pos)
 {
     if (pos < int(baseTextPosition)) // Not in text body
         return -1;
-    vector<int>::const_iterator it = 
+    vector<int>::const_iterator it =
         upper_bound(pbreaks.begin(), pbreaks.end(), pos);
     return int(it - pbreaks.begin() + 1);
 }
@@ -723,7 +722,7 @@ bool Db::Native::getRawText(Xapian::docid docid_combined, string& rawtext)
 // reference-counting is not mt-safe. We take ownership and need
 // to delete it before returning.
 bool Db::Native::addOrUpdateWrite(
-    const string& udi, const string& uniterm, Xapian::Document *newdocument_ptr, 
+    const string& udi, const string& uniterm, Xapian::Document *newdocument_ptr,
     size_t textlen, const string& rawztext)
 {
 #ifdef IDX_THREADS
@@ -735,8 +734,8 @@ bool Db::Native::addOrUpdateWrite(
     // Check file system full every mbyte of indexed text. It's a bit wasteful
     // to do this after having prepared the document, but it needs to be in
     // the single-threaded section.
-    if (m_rcldb->m_maxFsOccupPc > 0 && 
-        (m_rcldb->m_occFirstCheck || 
+    if (m_rcldb->m_maxFsOccupPc > 0 &&
+        (m_rcldb->m_occFirstCheck ||
          (m_rcldb->m_curtxtsz - m_rcldb->m_occtxtsz) / MB >= 1)) {
         LOGDEB("Db::add: checking file system usage\n");
         int pc;
@@ -788,7 +787,7 @@ bool Db::Native::addOrUpdateWrite(
                m_rcldb->m_reason << "\n");
         // This only affects snippets, so let's say not fatal
     }
-    
+
     // Test if we're over the flush threshold (limit memory usage):
     bool ret = m_rcldb->maybeflush(textlen);
 #ifdef IDX_THREADS
@@ -797,10 +796,10 @@ bool Db::Native::addOrUpdateWrite(
     return ret;
 }
 
-bool Db::Native::purgeFileWrite(bool orphansOnly, const string& udi, 
+bool Db::Native::purgeFileWrite(bool orphansOnly, const string& udi,
                                 const string& uniterm)
 {
-#if defined(IDX_THREADS) 
+#if defined(IDX_THREADS)
     // We need a mutex even if we have a write queue (so we can only
     // be called by a single thread) to protect about multiple acces
     // to xrdb from subDocs() which is also called from needupdate()
@@ -848,7 +847,7 @@ bool Db::Native::purgeFileWrite(bool orphansOnly, const string& udi,
                     continue;
                 }
             }
-        
+
             if (!orphansOnly || sig != subdocsig) {
                 LOGDEB("Db::purgeFile: delete subdoc " << *it << "\n");
                 deleteDocument(*it);
@@ -944,7 +943,7 @@ bool Db::open(OpenMode mode, OpenError *error)
             setSynGroupsFile(synfile);
         }
     }
-    
+
     string dir = m_config->getDbDir();
     string ermsg;
     try {
@@ -1127,7 +1126,7 @@ bool Db::setExtraQueryDbs(const std::vector<std::string>& dbs)
     return adjustdbs();
 }
 
-bool Db::addQueryDb(const string &_dir) 
+bool Db::addQueryDb(const string &_dir)
 {
     string dir = _dir;
     LOGDEB0("Db::addQueryDb: ndb " << m_ndb << " iswritable " <<
@@ -1152,7 +1151,7 @@ bool Db::rmQueryDb(const string &dir)
     if (dir.empty()) {
         m_extraDbs.clear();
     } else {
-        vector<string>::iterator it = find(m_extraDbs.begin(), 
+        vector<string>::iterator it = find(m_extraDbs.begin(),
                                            m_extraDbs.end(), dir);
         if (it != m_extraDbs.end()) {
             m_extraDbs.erase(it);
@@ -1190,7 +1189,7 @@ size_t Db::Native::whatDbIdx(Xapian::docid id)
 {
     LOGDEB1("Db::whatDbIdx: xdocid " << id << ", " <<
             m_rcldb->m_extraDbs.size() << " extraDbs\n");
-    if (id == 0) 
+    if (id == 0)
         return (size_t)-1;
     if (m_rcldb->m_extraDbs.size() == 0)
         return 0;
@@ -1229,7 +1228,7 @@ bool Db::testDbDir(const string &dir, bool *stripped_p)
                dir << "]: " << aerr << "\n");
         return false;
     }
-    if (stripped_p) 
+    if (stripped_p)
         *stripped_p = mstripped;
 
     return true;
@@ -1242,7 +1241,7 @@ bool Db::isopen()
     return m_ndb->m_isopen;
 }
 
-// Try to translate field specification into field prefix. 
+// Try to translate field specification into field prefix.
 bool Db::fieldToTraits(const string& fld, const FieldTraits **ftpp,
                        bool isquery)
 {
@@ -1258,7 +1257,7 @@ bool Db::fieldToTraits(const string& fld, const FieldTraits **ftpp,
 // fields and position jumps to separate fields
 class TextSplitDb : public TextSplitP {
 public:
-    Xapian::Document &doc;   // Xapian document 
+    Xapian::Document &doc;   // Xapian document
     // Base for document section. Gets large increment when we change
     // sections, to avoid cross-section proximity matches.
     Xapian::termpos basepos;
@@ -1277,7 +1276,7 @@ public:
     {}
 
     // Reimplement text_to_words to insert the begin and end anchor terms.
-    virtual bool text_to_words(const string &in) 
+    virtual bool text_to_words(const string &in)
     {
         string ermsg;
 
@@ -1312,7 +1311,7 @@ public:
         return true;
     }
 
-    void setTraits(const FieldTraits& ftp) 
+    void setTraits(const FieldTraits& ftp)
     {
         ft = ftp;
         if (!ft.pfx.empty())
@@ -1354,7 +1353,7 @@ public:
 #endif
             // Index the prefixed term.
             if (!m_ts->ft.pfx.empty()) {
-                m_ts->doc.add_posting(m_ts->ft.pfx + term, pos, 
+                m_ts->doc.add_posting(m_ts->ft.pfx + term, pos,
                                       m_ts->ft.wdfinc);
             }
             return true;
@@ -1407,7 +1406,7 @@ public:
     int m_lastpagepos;
     // increment of page breaks at same pos. Normally 0, 1.. when several
     // breaks at the same pos
-    int m_pageincr; 
+    int m_pageincr;
     vector <pair<int, int> > m_pageincrvec;
 };
 
@@ -1531,7 +1530,7 @@ bool Db::setSynGroupsFile(const string& fn)
 {
     return m_syngroups->setfile(fn);
 }
-    
+
 static const string cstr_nc("\n\r\x0c\\");
 #define RECORD_APPEND(R, NM, VAL) {R += NM + "=" + VAL + "\n";}
 
@@ -1551,7 +1550,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
     // to avoid changing too much code (the previous version passed a copy).
     Xapian::Document *newdocument_ptr = new Xapian::Document;
     Xapian::Document &newdocument(*newdocument_ptr);
-    
+
     // The term processing pipeline:
     TermProcIdx tpidx;
     TermProc *nxt = &tpidx;
@@ -1566,7 +1565,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
     TermProcPrep tpprep(nxt);
     if (o_index_stripchars)
         nxt = &tpprep;
-    
+
     TextSplitDb splitter(m_ndb->xwdb, newdocument, nxt);
     tpidx.setTSD(&splitter);
 
@@ -1590,11 +1589,11 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
         if (m_idxTextTruncateLen > 0) {
             doc.text = truncate_to_word(doc.text, m_idxTextTruncateLen);
         }
-        
+
         // If the ipath is like a path, index the last element. This is
         // for compound documents like zip and chm for which the filter
-        // uses the file path as ipath. 
-        if (!doc.ipath.empty() && 
+        // uses the file path as ipath.
+        if (!doc.ipath.empty() &&
             doc.ipath.find_first_not_of("0123456789") != string::npos) {
             string utf8ipathlast;
             // There is no way in hell we could have an idea of the
@@ -1612,7 +1611,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
 #ifdef _WIN32
             // Windows file names are case-insensitive, so we
             // translate to UTF-8 and lowercase
-            string upath = compute_utf8fn(m_config, path, false);            
+            string upath = compute_utf8fn(m_config, path, false);
             unacmaybefold(upath, path, "UTF-8", UNACOP_FOLD);
 #endif
 
@@ -1630,7 +1629,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
                     // Just truncate it. May still be useful because of wildcards
                     elt = elt.substr(0, 230);
                 }
-                newdocument.add_posting(wrap_prefix(pathelt_prefix) + elt, 
+                newdocument.add_posting(wrap_prefix(pathelt_prefix) + elt,
                                         splitter.basepos + splitter.curpos++);
             }
             splitter.basepos += splitter.curpos + 100;
@@ -1701,7 +1700,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
         // high avg word length and high variation (because there are
         // word-splitters like +/ inside the data).
         TextSplit::Stats::Values v = splitter.getStats();
-        // v.avglen > 15 && v.sigma > 12 
+        // v.avglen > 15 && v.sigma > 12
         if (v.count > 200 && (v.avglen > 10 && v.sigma / v.avglen > 0.8)) {
             LOGINFO("RclDb::addOrUpdate: rejecting doc for bad stats count " <<
                     v.count << " avglen " << v.avglen << " sigma " << v.sigma <<
@@ -1730,7 +1729,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
                     utf8truncate(fn, 230);
                 string::size_type pos = fn.rfind('.');
                 if (pos != string::npos && pos != fn.length() - 1) {
-                    newdocument.add_boolean_term(wrap_prefix(fileext_prefix) + 
+                    newdocument.add_boolean_term(wrap_prefix(fileext_prefix) +
                                                  fn.substr(pos + 1));
                 }
                 newdocument.add_term(wrap_prefix(unsplitfilename_prefix) + fn,0);
@@ -1747,22 +1746,22 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
         // Fields used for selecting by date. Note that this only
         // works for years AD 0-9999 (no crash elsewhere, but things
         // won't work).
-        time_t mtime = atoll(doc.dmtime.empty() ? doc.fmtime.c_str() : 
+        time_t mtime = atoll(doc.dmtime.empty() ? doc.fmtime.c_str() :
                              doc.dmtime.c_str());
         struct tm tmb;
         localtime_r(&mtime, &tmb);
         char buf[50]; // It's actually 9, but use 50 to suppress warnings.
         snprintf(buf, 50, "%04d%02d%02d",
                  tmb.tm_year+1900, tmb.tm_mon + 1, tmb.tm_mday);
-            
+
         // Date (YYYYMMDD)
-        newdocument.add_boolean_term(wrap_prefix(xapday_prefix) + string(buf)); 
+        newdocument.add_boolean_term(wrap_prefix(xapday_prefix) + string(buf));
         // Month (YYYYMM)
         buf[6] = '\0';
         newdocument.add_boolean_term(wrap_prefix(xapmonth_prefix) + string(buf));
         // Year (YYYY)
         buf[4] = '\0';
-        newdocument.add_boolean_term(wrap_prefix(xapyear_prefix) + string(buf)); 
+        newdocument.add_boolean_term(wrap_prefix(xapyear_prefix) + string(buf));
 
 #ifdef EXT4_BIRTH_TIME
         // Fields used for selecting by birtime. Note that this only
@@ -1776,9 +1775,9 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
             localtime_r(&birtime, &tmbr);
             char brbuf[50]; // It's actually 9, but use 50 to suppress warnings.
             snprintf(brbuf, 50, "%04d%02d%02d", tmbr.tm_year+1900, tmbr.tm_mon + 1, tmbr.tm_mday);
-            
+
             // Date (YYYYMMDD)
-            newdocument.add_boolean_term(wrap_prefix(xapbriday_prefix) + string(brbuf)); 
+            newdocument.add_boolean_term(wrap_prefix(xapbriday_prefix) + string(brbuf));
             // Month (YYYYMM)
             brbuf[6] = '\0';
             newdocument.add_boolean_term(wrap_prefix(xapbrimonth_prefix) + string(brbuf));
@@ -1794,7 +1793,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
         // - url
         // - sample
         // - caption (title limited to 100 chars)
-        // - mime type 
+        // - mime type
         //
         // The title, author, abstract and keywords fields are special,
         // they always get stored in the document data
@@ -1836,10 +1835,10 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
         }
         if (doc.haschildren) {
             newdocument.add_boolean_term(has_children_term);
-        }   
+        }
         if (!doc.pcbytes.empty())
             RECORD_APPEND(record, Doc::keypcs, doc.pcbytes);
-        char sizebuf[30]; 
+        char sizebuf[30];
         sprintf(sizebuf, "%u", (unsigned int)doc.text.length());
         RECORD_APPEND(record, Doc::keyds, sizebuf);
 
@@ -1852,7 +1851,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
         if (!doc.ipath.empty())
             RECORD_APPEND(record, Doc::keyipt, doc.ipath);
 
-        // Fields from the Meta array. Handle title specially because it has a 
+        // Fields from the Meta array. Handle title specially because it has a
         // different name inside the data record (history...)
         string& ttref = doc.meta[Doc::keytt];
         ttref = neutchars(truncate_to_word(ttref, m_idxMetaStoredLen), cstr_nc);
@@ -1872,11 +1871,11 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
             trimstring(absref, " \t\r\n");
             if (absref.empty()) {
                 if (!doc.text.empty())
-                    absref = cstr_syntAbs + 
-                        neutchars(truncate_to_word(doc.text, m_idxAbsTruncLen), 
+                    absref = cstr_syntAbs +
+                        neutchars(truncate_to_word(doc.text, m_idxAbsTruncLen),
                                   cstr_nc);
             } else {
-                absref = neutchars(truncate_to_word(absref, m_idxAbsTruncLen), 
+                absref = neutchars(truncate_to_word(absref, m_idxAbsTruncLen),
                                    cstr_nc);
             }
             // Do the append here to avoid the different truncation done
@@ -1886,15 +1885,15 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
                 absref.clear();
             }
         }
-        
+
         // Append all regular "stored" meta fields
         const set<string>& stored = m_config->getStoredFields();
         for (set<string>::const_iterator it = stored.begin();
              it != stored.end(); it++) {
             string nm = m_config->fieldCanon(*it);
             if (!doc.meta[nm].empty()) {
-                string value = 
-                    neutchars(truncate_to_word(doc.meta[nm], 
+                string value =
+                    neutchars(truncate_to_word(doc.meta[nm],
                                                m_idxMetaStoredLen), cstr_nc);
                 RECORD_APPEND(record, nm, value);
             }
@@ -1924,7 +1923,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
             }
             RECORD_APPEND(record, string(cstr_mbreaks), multibreaks.str());
         }
-    
+
         // If the file's md5 was computed, add value and term.  The
         // value is optionally used for query result duplicate
         // elimination, and the term to find the duplicates (XM is the
@@ -1961,7 +1960,7 @@ bool Db::addOrUpdate(const string &udi, const string &parent_udi, Doc &doc)
                                    doc.text.length(), rawztext);
 }
 
-bool Db::Native::docToXdocXattrOnly(TextSplitDb *splitter, const string &udi, 
+bool Db::Native::docToXdocXattrOnly(TextSplitDb *splitter, const string &udi,
                                     Doc &doc, Xapian::Document& xdoc)
 {
     LOGDEB0("Db::docToXdocXattrOnly\n");
@@ -2017,7 +2016,7 @@ bool Db::Native::docToXdocXattrOnly(TextSplitDb *splitter, const string &udi,
         string nm = m_rcldb->m_config->fieldCanon(*it);
         if (doc.getmeta(nm, nullptr)) {
             string value = neutchars(
-                truncate_to_word(doc.meta[nm], m_rcldb->m_idxMetaStoredLen), 
+                truncate_to_word(doc.meta[nm], m_rcldb->m_idxMetaStoredLen),
                 cstr_nc);
             datadic.set(nm, value, "");
         }
@@ -2027,7 +2026,7 @@ bool Db::Native::docToXdocXattrOnly(TextSplitDb *splitter, const string &udi,
     // method for consistency in format, instead of using ConfSimple print
     vector<string> names = datadic.getNames("");
     data.clear();
-    for (vector<string>::const_iterator it = names.begin(); 
+    for (vector<string>::const_iterator it = names.begin();
          it != names.end(); it++) {
         string value;
         datadic.get(*it, value, "");
@@ -2178,7 +2177,7 @@ bool Db::needUpdate(const string &udi, const string& sig, unsigned int *docidp, 
     std::unique_lock<std::mutex> lock(m_ndb->m_mutex);
 #endif
 
-    // Try to find the document indexed by the uniterm. 
+    // Try to find the document indexed by the uniterm.
     Xapian::PostingIterator docid;
     XAPTRY(docid = m_ndb->xrdb.postlist_begin(uniterm), m_ndb->xrdb, m_reason);
     if (!m_reason.empty()) {
@@ -2274,7 +2273,7 @@ bool Db::createStemDbs(const vector<string>& langs)
 /**
  * This is called at the end of an indexing session, to delete the
  * documents for files that are no longer there. This can ONLY be called
- * after a full file-system tree walk, else the file existence flags will 
+ * after a full file-system tree walk, else the file existence flags will
  * be wrong.
  */
 bool Db::purge()
@@ -2284,7 +2283,7 @@ bool Db::purge()
         return false;
     LOGDEB("Db::purge: m_isopen " << m_ndb->m_isopen << " m_iswritable " <<
            m_ndb->m_iswritable << "\n");
-    if (m_ndb->m_isopen == false || m_ndb->m_iswritable == false) 
+    if (m_ndb->m_isopen == false || m_ndb->m_iswritable == false)
         return false;
 
 #ifdef IDX_THREADS
@@ -2370,7 +2369,7 @@ bool Db::purge()
 bool Db::docExists(const string& uniterm)
 {
 #ifdef IDX_THREADS
-    // Need to protect read db against multiaccess. 
+    // Need to protect read db against multiaccess.
     std::unique_lock<std::mutex> lock(m_ndb->m_mutex);
 #endif
 
@@ -2406,7 +2405,7 @@ bool Db::purgeFile(const string &udi, bool *existed)
 #ifdef IDX_THREADS
     if (m_ndb->m_havewriteq) {
         string rztxt;
-        DbUpdTask *tp = new DbUpdTask(DbUpdTask::Delete, udi, uniterm, 
+        DbUpdTask *tp = new DbUpdTask(DbUpdTask::Delete, udi, uniterm,
                                       nullptr, (size_t)-1, rztxt);
         if (!m_ndb->m_wqueue.put(tp)) {
             LOGERR("Db::purgeFile:Cant queue task\n");
@@ -2434,7 +2433,7 @@ bool Db::purgeOrphans(const string &udi)
 #ifdef IDX_THREADS
     if (m_ndb->m_havewriteq) {
         string rztxt;
-        DbUpdTask *tp = new DbUpdTask(DbUpdTask::PurgeOrphans, udi, uniterm, 
+        DbUpdTask *tp = new DbUpdTask(DbUpdTask::PurgeOrphans, udi, uniterm,
                                       nullptr, (size_t)-1, rztxt);
         if (!m_ndb->m_wqueue.put(tp)) {
             LOGERR("Db::purgeFile:Cant queue task\n");
@@ -2697,7 +2696,7 @@ bool Db::getContainerDoc(const Doc &idoc, Doc& ctdoc)
         // File-level doc ??
         ctdoc = idoc;
         return true;
-    } 
+    }
     // See if we have a parent term
     Xapian::Document xdoc;
     if (!m_ndb->getDoc(inudi, idoc.idxi, xdoc)) {

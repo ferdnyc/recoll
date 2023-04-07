@@ -17,8 +17,6 @@
 #ifndef _TEXTSPLIT_H_INCLUDED_
 #define _TEXTSPLIT_H_INCLUDED_
 
-#include <math.h>
-
 #include <string>
 #include <vector>
 

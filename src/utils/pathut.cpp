@@ -59,7 +59,6 @@
 #include <errno.h>
 #include <fstream>
 #include <iostream>
-#include <math.h>
 #include <regex>
 #include <set>
 #include <sstream>
@@ -1229,7 +1228,7 @@ public:
             CLOSEDIR(dirhdl);
         }
     }
-        
+
     DIRHDL *dirhdl{nullptr};
     PathDirContents::Entry entry;
     std::string dirpath;
@@ -1300,7 +1299,7 @@ bool listdir(const string& dir, string& reason, set<string>& entries)
 {
     ostringstream msg;
     PathDirContents dc(dir);
-    
+
     if (!path_isdir(dir)) {
         msg << "listdir: " << dir <<  " not a directory";
         goto out;

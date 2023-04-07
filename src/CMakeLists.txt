@@ -532,16 +532,21 @@ include_directories(
 
 #--- librecoll
 
-if (LINUX)
+#if (LINUX)
     add_library(librecoll SHARED ${librecoll_SOURCES})
-else ()
-    add_library(librecoll STATIC ${librecoll_SOURCES})
-endif ()
+#else ()
+#    add_library(librecoll STATIC ${librecoll_SOURCES})
+#endif ()
 
 set_target_properties(librecoll PROPERTIES
     VERSION ${PROJECT_VERSION}
     OUTPUT_NAME recoll
     POSITION_INDEPENDENT_CODE TRUE
+    FRAMEWORK TRUE
+    MACOSX_BUNDLE_BUNDLE_NAME librecoll
+    MACOSX_FRAMEWORK_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_FRAMEWORK_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+    MACOSX_FRAMEWORK_IDENTIFIER org.lesbonscomptes.librecoll
 )
 
 target_compile_definitions(librecoll PUBLIC
@@ -589,7 +594,7 @@ endif()
 
 if (APPLE)
     # assuming packages are installed via homebrew.
-    include_directories(/usr/local/include /opt/homebrew/include)
+    #include_directories(/usr/local/include /opt/homebrew/include)
     # External dependencies will be copied automatically via macdeployqt
     find_package(ZLIB REQUIRED) # https://cmake.org/cmake/help/latest/module/FindZLIB.html
     find_package(Iconv REQUIRED) # https://cmake.org/cmake/help/latest/module/FindIconv.html
@@ -614,6 +619,13 @@ add_subdirectory(qtgui)
 if (APPLE)
     target_compile_definitions(recoll PRIVATE RECOLL_AS_MAC_BUNDLE)
 
+    set(RESOURCE_FILES
+        ${example_config_files}
+        5{filter_files}
+        ${mtpics_files}
+        ${docs_files}
+    )
+
     # .app bundle assembling
     target_sources(recoll PRIVATE
         ${example_config_files}
@@ -622,8 +634,26 @@ if (APPLE)
         ${bundle_icon}
         ${docs_files}
     )
-    set_target_properties(recollindex recollq PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/recoll.app/Contents/MacOS/)
+    #set_target_properties(recollindex recollq PROPERTIES
+    #    RUNTIME_OUTPUT_DIRECTORY
+    #        ${PROJECT_BINARY_DIR}/recoll.app/Contents/MacOS/
+    #)
+    set_target_properties(librecoll PROPERTIES
+        RESOURCE "${RESOURCE_FILES}"
+    )
+    install(CODE [[
+        include(BundleUtilities)
+        #fixup_bundle(librecoll.framework)
+        verify_bundle_prerequisites(librecoll.framework lib_prereqs lib_info)
+        #copy_resolved_framework_into_bundle(
+        #    librecoll.framework 
+        fixup_bundle(recoll.app $<TARGET_BUNDLE_DIR:librecoll>)
+        verify_app(recoll.app)
+    ]])
+    install(TARGETS librecoll recoll recollq recollindex
+        BUNDLE DESTINATION .
+        FRAMEWORK DESTINATION .
+    )
 endif()
 
 

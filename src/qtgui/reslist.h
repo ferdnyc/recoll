@@ -25,14 +25,14 @@
 #include "plaintorich.h"
 
 #if defined(USING_WEBENGINE)
-#  include <QWebEngineView>
-#  define RESLIST_PARENTCLASS QWebEngineView
+#include <QWebEngineView>
+#define RESLIST_PARENTCLASS QWebEngineView
 #elif defined(USING_WEBKIT)
-#  include <QWebView>
-#  define RESLIST_PARENTCLASS QWebView
+#include <QWebView>
+#define RESLIST_PARENTCLASS QWebView
 #else
-#  include <QTextBrowser>
-#  define RESLIST_PARENTCLASS QTextBrowser
+#include <QTextBrowser>
+#define RESLIST_PARENTCLASS QTextBrowser
 #endif
 
 class RclMain;
@@ -49,7 +49,7 @@ class Doc;
  */
 class ResList : public RESLIST_PARENTCLASS
 {
-    Q_OBJECT;
+    Q_OBJECT
 
     friend class QtGuiResListPager;
 public:

@@ -121,6 +121,8 @@ set(CMAKE_AUTOUIC TRUE)
 set(CMAKE_AUTORCC TRUE)
 
 add_executable(recoll
+    WIN32
+    MACOSX_BUNDLE
     ${qtgui_SOURCES}
     ${qtgui_ui_SOURCES}
     recoll.qrc
@@ -129,7 +131,6 @@ add_executable(recoll
 set_target_properties(recoll PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
     INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}/recoll"
-    MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_GUI_IDENTIFIER org.lesbonscomptes.recoll
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING
@@ -141,10 +142,10 @@ set(QtComponents Core Gui Widgets PrintSupport)
 
 if (RECOLL_ENABLE_WEBENGINE)
     list(APPEND QtComponents WebEngineWidgets)
-    target_compile_definitions(recoll PUBLIC USING_WEBENGINE)
+    target_compile_definitions(recoll PUBLIC USING_WEBENGINE=1)
 else()
     list(APPEND QtComponents WebKitWidgets)
-    target_compile_definitions(recoll PUBLIC USING_WEBKIT)
+    target_compile_definitions(recoll PUBLIC USING_WEBKIT=1)
 endif ()
 
 find_package(Qt${QT_MAJOR_VERSION} REQUIRED COMPONENTS ${QtComponents})

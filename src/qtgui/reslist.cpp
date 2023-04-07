@@ -68,10 +68,10 @@ static const QKeySequence quitKeySeq("Ctrl+q");
 static const QKeySequence closeKeySeq("Ctrl+w");
 
 #if defined(USING_WEBKIT)
-# include <QWebFrame>
-# include <QWebElement>
-# include <QWebSettings>
-# define QWEBSETTINGS QWebSettings
+#include <QWebFrame>
+#include <QWebElement>
+#include <QWebSettings>
+#define QWEBSETTINGS QWebSettings
 #elif defined(USING_WEBENGINE)
 // Notes for WebEngine:
 // - It used to be that all links must begin with http:// for
@@ -80,10 +80,10 @@ static const QKeySequence closeKeySeq("Ctrl+w");
 //   in linkClicked().
 // - The links passed to acceptNav.. have the host part 
 //   lowercased -> we change S0 to http://localhost/S0, not http://S0
-# include <QWebEnginePage>
-# include <QWebEngineSettings>
-# include <QtWebEngineWidgets>
-# define QWEBSETTINGS QWebEngineSettings
+#include <QWebEnginePage>
+#include <QWebEngineSettings>
+#include <QtWebEngineWidgets>
+#define QWEBSETTINGS QWebEngineSettings
 #endif
 
 #ifdef USING_WEBENGINE
